@@ -1,6 +1,6 @@
 yout: post
 title: Example content
-date: 2015-01-14 19:21:00 -0700
+date: 2015-01-14 11:30:00 +0800
 categories:
 - New
 tags:
