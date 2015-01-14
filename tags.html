@@ -1,0 +1,23 @@
+---
+layout: page
+title: Content Tags
+header: Content Tags
+group: navigation
+---
+
+{% include setup %}
+
+<ul class="tag_box inline">
+  {% assign tags_list = site.tags | sort %}
+  {% include tags_list %}
+</ul>
+
+{% assign tags_list = site.tags | sort %}
+{% for tag in tags_list %}
+  <h2 id="{{ tag[0] }}">{{ tag[0] }}</h2>
+  <ul>
+    {% assign pages_list = tag[1] %}  
+    {% include pages_list %}
+  </ul>
+{% endfor %}
+{% assign tags_list = nil %}

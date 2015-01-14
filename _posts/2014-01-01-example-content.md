@@ -2,6 +2,12 @@
 layout: post
 title: Example content
 date: 2014-01-01 16:25:06 -0700
+categories:
+- News
+tags:
+- Virtualization
+- Citrix
+- Storage
 ---
 
 
