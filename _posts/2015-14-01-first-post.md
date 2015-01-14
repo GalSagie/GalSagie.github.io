@@ -1,11 +1,13 @@
-yout: post
-title: Example content
-date: 2015-01-14 11:30:00 +0800
+---
+layout: post
+title: My First Post
+date: 2015-01-14 16:25:06 -0700
 categories:
-- New
+- News
 tags:
 - SDN
 ---
+
 
 ### My First Blog Post
 
