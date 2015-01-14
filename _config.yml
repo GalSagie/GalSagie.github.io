@@ -11,7 +11,7 @@ relative_permalinks: true
 # Setup
 title:               GalSagie
 tagline:             'A blog about network virtualization and cloud'
-description:         'Icon Here'
+description:         'My blog about everything related to SDN, NFV, Virtualization and Cloud'
 url:                 http://galsagie.github.io
 baseurl:             /
 paginate:            5
