@@ -1,6 +1,6 @@
 ---
 layout: post
-title: MSS Clamping as a tale of networking visiblity 
+title: MSS Clamping As A Tale Of Networking Visibility 
 date: 2015-01-15 16:25:06 -0700
 categories:
 - OAM
