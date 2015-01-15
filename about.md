@@ -4,27 +4,41 @@ title: About
 ---
 
 <p class="message">
-  Hey there! This page is included as an example. Feel free to customize it for your own use upon downloading. Carry on!
+  Welcome to my blog, this blog will have a mix of the regular "tech tutorials" i find as interesting topics, 
+  blended with some of my own opinions and predictions.
 </p>
 
-In the novel, *The Strange Case of Dr. Jeykll and Mr. Hyde*, Mr. Poole is Dr. Jekyll's virtuous and loyal butler. Similarly, Poole is an upstanding and effective butler that helps you build Jekyll themes. It's made by [@mdo](https://twitter.com/mdo).
 
-There are currently two themes built on Poole:
+## Myself
 
-* [Hyde](http://hyde.getpoole.com)
-* [Lanyon](http://lanyon.getpoole.com)
+I am Gal Sagie, a husband and a proud father that is lucky enough to have my greatest
+hobby as my work.
 
-Learn more and contribute on [GitHub](https://github.com/poole).
+I am a passionate software developer and architect specializing in networking layers and products.
+Have been dealing with a wide range of topics in the networking world from performance and scale to
+security and cloud.
+In recent years i have been (like the rest of the world) involed with SDN, NFV and Network Virtualization from all
+aspects (Performance / Managment / Monitoring / Deployment).
+Learning new things every day and enjoying it, interesting times in the networking world.
 
-## Setup
+## Thanks
 
-Some fun facts about the setup of this project include:
+I want to mention Scott Lowe, his professional blog and writing is what inspired me to
+write this blog, i am a regular visitor and reader and enjoying it.
+Thanks Scott, keep up the good work!
 
-* Built for [Jekyll](http://jekyllrb.com)
-* Developed on GitHub and hosted for free on [GitHub Pages](https://pages.github.com)
-* Coded with [Sublime Text 2](http://sublimetext.com), an amazing code editor
-* Designed and developed while listening to music like [Blood Bros Trilogy](https://soundcloud.com/maddecent/sets/blood-bros-series)
+(p.s. using Jekyll and Git Pages for this blog including this theme are also inspired from Scott :) )
+[Scott's Blog](http://http://blog.scottlowe.org/)
 
-Have questions or suggestions? Feel free to [open an issue on GitHub](https://github.com/poole/issues/new) or [ask me on Twitter](https://twitter.com/mdo).
+Hope you enjoy reading, and feel free to comment and send me
+feedbacks (gal.sagie at gmail dot com)
 
-Thanks for reading!
+
+
+
+
+
+
+
+
+
