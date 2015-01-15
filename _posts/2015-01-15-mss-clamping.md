@@ -1,6 +1,6 @@
 ---
 layout: post
-title: MSS Clamping As A Tale Of Networking Visibility 
+title: MSS Clamping As A Tale Of Network Visibility 
 date: 2015-01-15 16:25:06 -0700
 categories:
 - OAM
@@ -25,9 +25,11 @@ mainly the fact that security devices along the path tend to block ICMP messages
 In order to overcome this, TCP Clamping is introduced.
 
 The way TCP Clamping solves this is by leveraging the MSS option in the TCP header, 
-for each SYN packet, each device along the path, with TCP Clamping enabled, sets the packet MSS size to be equal to its MTU. 
+for each SYN packet, each device along the path, with TCP Clamping enabled, sets the packet MSS size to be adjusted according to its MTU. 
 
-By the time the packet is reached at the end host, the MSS represent the MTU of the path.
+By the time the packet is reached at the end host, the MSS can represent the MTU of the path.
+(There are some consideration when applying MSS Clamping on a PE Router, for example
+DDoS attacks, You can get more information [here.](http://media.blubrry.com/ipspace/www.ipSpace.net/nuggets/podcast/X1%20TCP%20MSS%20Clamping.mp4)
 
 Why is this interesting you ask or even relevant to the topic?
 
