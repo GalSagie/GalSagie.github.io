@@ -28,7 +28,7 @@ I have seen a lot of posts regarding this, and it certainly a very interesting p
 
 Reading this architecture reminded me a lot of something else, it reminded me the way [Cisco OpFlex](http://www.cisco.com/c/en/us/solutions/collateral/data-center-virtualization/application-centric-infrastructure/white-paper-c11-731302.html) is communicated between the controller and the agent running on the end nodes.
 
-Similar or not, in my view SDN implementors are starting to realize that we tried to abstract the control from the data plane using only protocols, and thats just not enough.
+Similar or not, in my view SDN implementors are starting to realize that we tried to abstract the control from the data plane using only protocols, and maybe thats just not enough.
 
 By having an agent / controller / lightweight controller / you name it running on the infrastructure at every end point (hypervisors and physical devices) we can concentrate on two things:
 
@@ -39,7 +39,10 @@ Without having to worry how every infrastructure piece is going to implement it
 * Building protocols/standards (many) for locally applying the above policy to software/hardware
 (For example OpenFlow)
 
-Having a "control" entity in the end nodes can show value in other areas (hint OAM, wait for my next post).
+Without getting into right or wrong debate, i believe this delegation approach simplifiy things
+and help the community continue to develop the two aspects seperated from each other.
+
+Having a "control" entity in the end nodes can show value in other areas (hint: OAM, wait for my next post to read more about smart agents).
 
 There are some solutions already fully distributed, running on the end nodes, [Midokura MidoNet](http://bradhedlund.com/2012/10/06/mind-blowing-l2-l4-network-virtualization-by-midokura-midonet/) is one of them.
 
