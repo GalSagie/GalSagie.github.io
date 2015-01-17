@@ -21,29 +21,6 @@ The more relevant and interesting phrase, in my opinion, from that entire blog i
 
 “Open vSwitch is the most popular choice of virtual switch in OpenStack deployments. To make OVS more effective in these environments, we believe the logical next step is to augment the low-level switching capabilities with a lightweight control plane that provides native support for common virtual networking abstractions.”
 
-And of course the high level architecture diagram of the solution:
-
-                              OVN Database
-                                     |
-                                     |
-                             (OVSDB Protocol)
-                                     |
-   +-------------------------------------------------------------------+
-   |                                 |                                 |
-   |                                 |                                 |
-   |                           ovn-controller                          |
-   |                              |     |                              |
-   |                              |     |                              |
-   |               +--------------+     +--------------+               |
-   |               |                                   |               |
-   |               |                                   |               |
-   |       (OVSDB Protocol)                        (OpenFlow)          |
-   |               |                                   |               |
-   |               |                                   |               |
-   |         ovsdb-server                         ovs-vswitchd         |
-   |                                                                   |
-   +---------------------------- Hypervisor ---------------------------+
-
 
 I have seen a lot of posts regarding this, and it certainly a very interesting project to look for, but i want to tackle this from few interesting views:
 
