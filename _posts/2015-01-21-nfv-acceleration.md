@@ -9,9 +9,6 @@ tags:
 - SDN
 - NFV
 - DPDK
-- PF_RING
-- netmap
-- OPNFV
 ---
 
 NFV is certainly not a term needed to be explained in this point of time, feel free to google it and understand what it is if you never heard about it.
