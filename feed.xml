@@ -1,8 +1,5 @@
 ---
 layout: page
-title : RSS Feed
-header : RSS Feed
-group: navigation
 ---
 
 <?xml version="1.0" encoding="UTF-8"?>
