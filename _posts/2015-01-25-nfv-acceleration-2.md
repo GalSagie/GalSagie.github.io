@@ -24,12 +24,15 @@ In this post i am going to concentrate on by passing host layers and HW offloadi
 ## Passthrough and SR-IOV
 
 It is possible to directly assign a host's PCI network device to a guest. One prerequisite for doing this assignment is that the host must support either the Intel VT-d or AMD IOMMU extensions. 
+Doing this bypass the hypervisor and other switching processing done inside the host and hence improve the networking
+performance of the guest (the virtual appliance).
 
 There are two methods of setting up assignment of a PCI device to a guest:
  
 ### Standard Passthrough
  
 This assignment allows virtual machines exclusive access to PCI devices for a range of tasks, and allows PCI devices to appear and behave as if they were physically attached to the guest operating system.
+Basically exclusively assigning a NIC port to a VM.
 
 ### SR-IOV
 
