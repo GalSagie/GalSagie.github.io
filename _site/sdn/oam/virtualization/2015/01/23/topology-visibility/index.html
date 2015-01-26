@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      Topology Visibility in Virtualized Environments &middot; GalSagie
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/lanyon.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700%7CPT+Sans:400">
+  <link rel="stylesheet" href="/public/font-awesome/css/font-awesome.min.css">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-precomposed.png">
+  <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body>
+
+    <!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
+     styles, `#sidebar-checkbox` for behavior. -->
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+<!-- Toggleable sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-item">
+    <p><img src="http://galsagie.github.io/public/img/my_image.jpg" alt="MyImage" width="200" height="200" /></p>
+    <p>My blog about everything related to SDN, NFV, Virtualization and Cloud</p>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item" href="/">Home</a>
+
+    
+
+    
+    
+      
+        
+      
+    
+      
+        
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/about/">About</a>
+        
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/archive/">Site Archives</a>
+        
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/categories/">Post Categories</a>
+        
+      
+    
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/tags/">Content Tags</a>
+        
+      
+    
+    
+  </nav>
+  
+   <div class="sidebar-item">
+    <p>
+      <a href="https://github.com/GalSagie"><i class="fa fa-github fa-3x"></i></a>
+      <a href="https://twitter.com/GalSagie"><i class="fa fa-twitter fa-3x"></i></a>
+      <a href="https://www.linkedin.com/pub/gal-sagie/14/1ab/577"><i class="fa fa-linkedin-square fa-3x"></i></a>
+      <a href="http://galsagie.github.io/feed.xml"><i class="fa fa-rss fa-3x"></i></a>
+    </p>
+  </div>
+
+  <div class="sidebar-item">
+    <p>
+      &copy; 2015. All rights reserved.
+    </p>
+  </div>
+</div>
+
+
+    <!-- Wrap is the content to shift when toggling the sidebar. We wrap the
+         content to avoid any CSS collisions with our real content. -->
+    <div class="wrap">
+      <div class="masthead">
+        <div class="container">
+          <h3 class="masthead-title">
+            <a href="/" title="Home">GalSagie</a>
+            <small>A blog about network virtualization and cloud</small>
+          </h3>
+        </div>
+      </div>
+
+      <div class="container content">
+        <div class="post">
+  <h1 class="post-title">Topology Visibility in Virtualized Environments</h1>
+  <span class="post-date">23 Jan 2015</span>
+  <p>In a <a href="http://galsagie.github.io/oam/virtualization/2015/01/15/mss-clamping/">previous post</a> i mentioned that there are many new challenges in SDN to achieve sufficient operations and management visibility.</p>
+
+<p>In this post i am going to tackle one of the basic use case, finding all the physical paths between two virtual machines in our data center, mainly including the physical devices connecting the two hosts these virtual machines reside in (the case of two virtual machines in the same host is easy).</p>
+
+<p>First, why i say all paths ? because in a common deployment today there is always load balancing and multi pathing on the way, usually with dynamic protocols that enable traffic to traverse in all possible paths, meaning we need to find all these paths.
+We will soon see that this makes our task more challenging.</p>
+
+<p>Secondly, why being able to find the physical path between two VM’s is important? because when things go wrong we need to do root cause analysis and correlate the possible network deficiencies/outage in the VM to the physical devices that might cause it (of course there are many other reasons for it)</p>
+
+<p>Doing this correlation is a lot more complex in virtualized environments with overlays and tunnels, where the user usually experience the problem in the logical network where in fact in many cases its in the physical network.</p>
+
+<p>One example of a problem that happens many times is MTU misconfiguration in the physical devices (MTU needs to be increased from the default 1500 when using overlays like VXLAN).
+Knowing the path between two VM’s that stopped communicating can help us pin point, by following the traffic, where exactly the misconfiguration is.</p>
+
+<p>One could argue, that we can potentially achieve this, if all the possible devices we can put in our data center, are connected to the controller and expose all the needed API’s between them to find the device neighbours.</p>
+
+<p>Rather its feasible or not in real production with multi vendor devices, is a question for the future, but it certainly not a reality in many of today’s solutions and deployments (for example VMware NSX which is currently still agnostic to the physical switches/routers, although efforts are made for some synchronization between physical devices and the controller, but nothing related to topology discovery at least as much as i know..)</p>
+
+<p>Lets start describing the currently feasible solutions to solve this challenge.</p>
+
+<h2>LLDP / CDP (SNMP)</h2>
+
+<p>CDP and LLDP are standard protocols to exchange neighbour discovery messages between network devices and are largely implemented in switches and routers (CDP for Cisco and LLDP for the rest).
+The neighbour information is accessible using SNMP MIB’s (reading the neighbours of each device).</p>
+
+<p>Potentially this could be the perfect solution, but it has some major problems:</p>
+
+<p>1) SNMP is many times disabled in production due to security reasons, even in cases when its enabled, LLDP and CDP are disabled for the same reason</p>
+
+<p>2) Anyone that worked enough time with SNMP knows its the wild wild west, even that LLDP and CDP are standards, still many vendors choose to implement them in different and challenging ways which makes it hard to create a unified system to extract this information from the MIB </p>
+
+<p>3) Some vendors have limitations in their LLDP implementation (for example Brocade switches connected with ISL dont support LLDP).  this makes it hard to be a perfect solution in all deployments.</p>
+
+<h2>Hypervisor Agents and Traceroute</h2>
+
+<p>Traceroute is a tool meant to accomplish the exact thing we are trying to achieve, trace the path between two end points. (listing all the L3 devices on the path)</p>
+
+<p>Traceroute does that by sending packets from source to destination with increasing TTL starting at 1, It leverage the fact that routers decrement packets TTL value by 1 when routing and discard packets whose TTL value has reached zero, returning the ICMP error message ICMP Time Exceeded to the sender.</p>
+
+<p>We could potentially have agents in the hosts that sends traceroute to one another in order to find the path between two hosts.
+The major problem here relates to something i wrote in the beginning of the post, traceroute doesn’t work in multi paths / load balanced paths, it doesnt find all the paths and can even lead to finding invalid paths.</p>
+
+<p>The following picture illustrate the problem of traceroute in multipath environments:
+<img src="http://paris-traceroute.net/images/load_balancer.gif" /></p>
+
+<p>As you can see point L is a load balancer, the first packet with TTL=1 and the second packet with TTL=2 are load balanced to the upper path (starting at Device A), how ever the third packet with TTL=3 is load balanced to the down path (starting at Device B)
+This makes traceroute return invalid path as a result.</p>
+
+<p><a href="http://www.paris-traceroute.net/">Paris Traceroute</a> is an open source project that tries to solve the above problem.</p>
+
+<p>Its key innovation is to control the probe packet header fields in a manner that allows all probes towards a destination to follow the same path in the presence of per-flow load balancing. It also allows a user to distinguish between the presence of per-flow load balancing and per-packet load balancing</p>
+
+<p>you can read more about it in the link, bare in mind that it still doesnt solve all possible dynamic load balancing scenarios but still do better than classical traceroute.</p>
+
+<p>Another problem of traceroute is that unlike CDP/LLDP it doesnt return the actual interface indexes that the devices are connected by, which is an important information when doing root cause analysis.</p>
+
+<h2>Record Route</h2>
+
+<p>Record route is an IP header option (option 7) and is used to track the path of the packet, every router in the path that see this option enabled must add its address to a route list.</p>
+
+<p>When the packet is received in the end hop, the agent can extract the full path the packet traversed.
+Of course the same problem with multipathing exists with this solution just as well, in addition to possible security issues and even small performance decrease.</p>
+
+<h2>Flow Export</h2>
+
+<p>Flow export mechanism (NetFlow / IPFIX / sFlow) can help us collect and analyze flows statistics from all devices and potentially build topology graphs from it.
+A good post that is presenting a demo of troubleshooting a network path using this method can be <a href="http://bradhedlund.com/2014/09/02/demo-end-to-end-hop-by-hop-physical-and-virtual-network-flow-visibility-with-nsx/">found here.</a></p>
+
+<p>The demo as you see is a very simple scenario, i am not sure what happens in real deployments when we have so many flows to analyze with duplicated inner IP’s.</p>
+
+  <span class="post-date">Tags:
+    
+    
+
+
+  <a href="http://galsagie.github.io/tags/#OAM">OAM</a>
+  
+    &middot;
+  
+
+  <a href="http://galsagie.github.io/tags/#ParisTraceRoute">ParisTraceRoute</a>
+  
+    &middot;
+  
+
+  <a href="http://galsagie.github.io/tags/#SDN">SDN</a>
+  
+    &middot;
+  
+
+  <a href="http://galsagie.github.io/tags/#SNMP">SNMP</a>
+  
+
+
+
+  </span>
+  
+    <span class="post-date">
+    &larr; Previous Post: <a href="/sdn/nfv/virtualization/2015/01/21/nfv-acceleration/">NFV Acceleration (Part 1)</a></span>
+  
+  
+    <span class="post-date">
+    Next Post: <a href="/sdn/nfv/virtualization/2015/01/25/nfv-acceleration-2/">NFV Acceleration (Part 2)</a> &rarr;</span>
+  
+
+  <span class="post-sharing"><p>Be social and share this post!<br />
+
+<a href="https://www.facebook.com/sharer/sharer.php?u=http://galsagie.github.io/sdn/oam/virtualization/2015/01/23/topology-visibility/" title="Share on Facebook"><i class="fa fa-facebook-square fa-2x"></i></a> 
+<a href="https://twitter.com/intent/tweet?text=http://galsagie.github.io/sdn/oam/virtualization/2015/01/23/topology-visibility/" title="Share on Twitter"><i class="fa fa-twitter-square fa-2x"></i></a> 
+<a href="https://plus.google.com/share?url=http://galsagie.github.io/sdn/oam/virtualization/2015/01/23/topology-visibility/" title="Share on Google Plus"><i class="fa fa-google-plus-square fa-2x"></i></a></p></span>
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="http://galsagie.github.io/sdn/nfv/virtualization/2015/01/25/nfv-acceleration-2/">
+            NFV Acceleration (Part 2)
+            <small>25 Jan 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://galsagie.github.io/sdn/nfv/virtualization/2015/01/21/nfv-acceleration/">
+            NFV Acceleration (Part 1)
+            <small>21 Jan 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://galsagie.github.io/ovs/virtualization/2015/01/16/ovn-distributed-controller/">
+            OVN and Distributed Controller
+            <small>16 Jan 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'galsagie'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+ 
+<!-- Start of StatCounter Code for Default Guide -->
+<script type="text/javascript">
+var sc_project=10238945; 
+var sc_invisible=0; 
+var sc_security="ea2d3a16"; 
+var scJsHost = (("https:" == document.location.protocol) ?
+"https://secure." : "http://www.");
+document.write("<sc"+"ript type='text/javascript' src='" +
+scJsHost+
+"statcounter.com/counter/counter.js'></"+"script>");
+</script>
+<noscript><div class="statcounter"><a title="shopify visitor
+statistics" href="http://statcounter.com/shopify/"
+target="_blank"><img class="statcounter"
+src="http://c.statcounter.com/10238945/0/ea2d3a16/0/"
+alt="shopify visitor statistics"></a></div></noscript>
+<!-- End of StatCounter Code for Default Guide --> 
+
+      </div>
+    </div>
+
+    <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+
+    <script>
+      (function(document) {
+        var toggle = document.querySelector('.sidebar-toggle');
+        var sidebar = document.querySelector('#sidebar');
+        var checkbox = document.querySelector('#sidebar-checkbox');
+
+        document.addEventListener('click', function(e) {
+          var target = e.target;
+
+          if(!checkbox.checked ||
+             sidebar.contains(target) ||
+             (target === checkbox || target === toggle)) return;
+
+          checkbox.checked = false;
+        }, false);
+      })(document);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Gal Sagie Blog</title>
+    <description>My blog about everything related to SDN, NFV, Virtualization and Cloud</description>
+    <link>http://galsagie.github.io</link>
+    <atom:link href="http://galsagie.github.io/feed.xml" rel="self" type="application/rss+xml" />
+    
+      <item>
+        <title>NFV Acceleration (Part 2)</title>
+        <description>&lt;p&gt;In a &lt;a href=&quot;http://galsagie.github.io/sdn/nfv/virtualization/2015/01/21/nfv-acceleration/&quot;&gt;previous post of this series&lt;/a&gt; i wrote about accelarating virtual functions using networking user space drivers, Intel&amp;#39;s DPDK is one main example but others exists just as well.&lt;/p&gt;
+
+&lt;p&gt;In this post i am going to concentrate on by passing host layers and HW offloading, all meant to improve performance and use &amp;quot;standard&amp;quot; hardware to ease some bottlenecks in virtualized environments and networking functions.&lt;/p&gt;
+
+&lt;h2&gt;Passthrough and SR-IOV&lt;/h2&gt;
+
+&lt;p&gt;It is possible to directly assign a host&amp;#39;s PCI network device to a guest. One prerequisite for doing this assignment is that the host must support either the Intel VT-d or AMD IOMMU extensions. 
+Doing this bypass the hypervisor and other switching processing done inside the host and hence improve the networking
+performance of the guest (the virtual appliance).&lt;/p&gt;
+
+&lt;p&gt;There are two methods of setting up assignment of a PCI device to a guest:&lt;/p&gt;
+
+&lt;h3&gt;Standard Passthrough&lt;/h3&gt;
+
+&lt;p&gt;This assignment allows virtual machines exclusive access to PCI devices for a range of tasks, and allows PCI devices to appear and behave as if they were physically attached to the guest operating system.
+Basically exclusively assigning a NIC port to a VM.&lt;/p&gt;
+
+&lt;h3&gt;SR-IOV&lt;/h3&gt;
+
+&lt;p&gt;SRIOV network cards provide multiple &amp;quot;Virtual Functions&amp;quot; (VF) that can each be individually assigned to a guest using PCI device assignment, and each will behave as a full physical network device. This permits many guests to gain the performance advantage of direct PCI device assignment, while only using a single slot on the physical machine.&lt;/p&gt;
+
+&lt;p&gt;Following is a picture that explains SR-IOV with Intel&amp;#39;s DPDK&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://www.dpdk.org/doc/guides/_images/fast_pkt_proc.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In the picture you can see that each VM has a VF that is identified by a separate VLAN id, what the NIC does is switch the packets into RX queues depending on the VLAN.
+There is also a PF that is attached to the virtual switch demonstrating we can use SR-IOV with conjunction to &amp;quot;standard&amp;quot; virtual switching deployments.&lt;/p&gt;
+
+&lt;p&gt;You can read more about SR-IOV in &lt;a href=&quot;http://blog.scottlowe.org/2009/12/02/what-is-sr-iov/&quot;&gt;this detailed post blog.&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;It is clear that out of the two passthrough options, SR-IOV is much more flexible, however still has some disadvantages:&lt;/p&gt;
+
+&lt;p&gt;One clear disadvantage is the ability to configure the virtual function in a different way between the VM&amp;#39;s (which might be of different tenants).
+Think what happens if one of the VM&amp;#39;s want to change the interface admin status.
+Another disadvantage is the fact that SR-IOV still doesn&amp;#39;t support live-migration of VM&amp;#39;s (as far as i know) which is a key feature in virtualized environments.
+But probably the major problem is still the lack of full support for SR-IOV in management and orchestration solutions for SDN and NFV.&lt;/p&gt;
+
+&lt;p&gt;SR-IOV can currently switch packets into VF&amp;#39;s using L2 data (MAC address/VLAN) but i believe we are going to see much more flexible options coming soon when NIC&amp;#39;s start offloading tunneling data (for example switching according to VXLAN).&lt;/p&gt;
+
+&lt;p&gt;Rather or not SR-IOV become a standard in NFV deployments is a good questions, i think it really depends on the performance gap compared to other more flexible and software based solutions.&lt;/p&gt;
+
+&lt;h2&gt;HW Offloading&lt;/h2&gt;
+
+&lt;p&gt;HW offloading is a big terminology which probably deserve at least its own post (if not many more).
+What i mean in our context is the ability of standard networking NIC&amp;#39;s to offload all sort of functions that are else done in software and hence free more CPU cycles for the actual application.&lt;/p&gt;
+
+&lt;p&gt;Virtual appliances can leverage HW offloading to increase their performance, few examples:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Filtering - NIC&amp;#39;s support the ability to define specific/wildcard filtering on header information up to L4 (for example Intel&amp;#39;s Flow Director).
+This feature can help in implementing firewall and DPI functions.
+Future NIC&amp;#39;s might be able to achieve more than just L4 filters.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Receive Side Scaling (RSS) - 
+This feature allows a NIC to load balance traffic between different cores by hashing the traffic and splitting it into different RX queues.
+Few instances of the same VNF can poll different RX queues and process packets simultaneously.
+in DPDK you can retrieve the hash result (Toeplitz hash) on the packet meta data and use it in internal flow table implementation (instead of re-calculating hash again). &lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Tunneling Encapsulation/Decapsulation - 
+Using the NIC to parse protocols and tunnels (VXLAN, NVGRE, VLANS) which are extensively used in virtualized environments. &lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;TCP Segmentation Offload and Large Receive Offload - 
+These two have great benefit for physical standard networking, offloading sequence numbering and packet header creation to the NIC (usually combined with checksum offloading as well) free CPU cycles from the networking stack / network function.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;STT (which is an overlay tunnel protocol used in Nicira&amp;#39;s SDN solution) leverage TCP Segmentation offload capabilities.&lt;/p&gt;
+
+&lt;p&gt;TSO is also useful for virtualization environments; TSO is a subset of the more generic segment offload (GSO) on Linux.
+With virtio it is possible to receive GSO packets as well as send them. This feature is negotiated between the guest and host.&lt;/p&gt;
+
+&lt;p&gt;The idea is that between guests they can exchange jumbo (64K) packets even with
+a smaller MTU. This helps in many ways. One example is only a single
+route lookup is needed&lt;/p&gt;
+
+&lt;p&gt;Dont worry if you didnt understand all the various features i just described, the intention was to give you a sense of what is currently possible with standard NIC&amp;#39;s and how it can be used.
+I do plan on dwelling on each of these subjects later in this series and understand specific use cases ,limitations and correct implementation.&lt;/p&gt;
+
+&lt;p&gt;In the next post of this series i am going to describe some commercial solutions that combines all the topics we discussed about and more.
+We are going to see software offerings from 6Wind and Windriver to accelerate NFV and achieve carrier grade deployments with standard software and devices, and a very interesting hardware offerings that fits into the NFV/SDN world like EZchip and Tilera.&lt;/p&gt;
+
+&lt;p&gt;Stay tuned..&lt;/p&gt;
+</description>
+        <pubDate>Sun, 25 Jan 2015 15:25:06 -0800</pubDate>
+        <link>http://galsagie.github.io//sdn/nfv/virtualization/2015/01/25/nfv-acceleration-2/</link>
+        <guid isPermaLink="true">http://galsagie.github.io//sdn/nfv/virtualization/2015/01/25/nfv-acceleration-2/</guid>
+      </item>
+    
+      <item>
+        <title>Topology Visibility in Virtualized Environments</title>
+        <description>&lt;p&gt;In a &lt;a href=&quot;http://galsagie.github.io/oam/virtualization/2015/01/15/mss-clamping/&quot;&gt;previous post&lt;/a&gt; i mentioned that there are many new challenges in SDN to achieve sufficient operations and management visibility.&lt;/p&gt;
+
+&lt;p&gt;In this post i am going to tackle one of the basic use case, finding all the physical paths between two virtual machines in our data center, mainly including the physical devices connecting the two hosts these virtual machines reside in (the case of two virtual machines in the same host is easy).&lt;/p&gt;
+
+&lt;p&gt;First, why i say all paths ? because in a common deployment today there is always load balancing and multi pathing on the way, usually with dynamic protocols that enable traffic to traverse in all possible paths, meaning we need to find all these paths.
+We will soon see that this makes our task more challenging.&lt;/p&gt;
+
+&lt;p&gt;Secondly, why being able to find the physical path between two VM’s is important? because when things go wrong we need to do root cause analysis and correlate the possible network deficiencies/outage in the VM to the physical devices that might cause it (of course there are many other reasons for it)&lt;/p&gt;
+
+&lt;p&gt;Doing this correlation is a lot more complex in virtualized environments with overlays and tunnels, where the user usually experience the problem in the logical network where in fact in many cases its in the physical network.&lt;/p&gt;
+
+&lt;p&gt;One example of a problem that happens many times is MTU misconfiguration in the physical devices (MTU needs to be increased from the default 1500 when using overlays like VXLAN).
+Knowing the path between two VM’s that stopped communicating can help us pin point, by following the traffic, where exactly the misconfiguration is.&lt;/p&gt;
+
+&lt;p&gt;One could argue, that we can potentially achieve this, if all the possible devices we can put in our data center, are connected to the controller and expose all the needed API’s between them to find the device neighbours.&lt;/p&gt;
+
+&lt;p&gt;Rather its feasible or not in real production with multi vendor devices, is a question for the future, but it certainly not a reality in many of today’s solutions and deployments (for example VMware NSX which is currently still agnostic to the physical switches/routers, although efforts are made for some synchronization between physical devices and the controller, but nothing related to topology discovery at least as much as i know..)&lt;/p&gt;
+
+&lt;p&gt;Lets start describing the currently feasible solutions to solve this challenge.&lt;/p&gt;
+
+&lt;h2&gt;LLDP / CDP (SNMP)&lt;/h2&gt;
+
+&lt;p&gt;CDP and LLDP are standard protocols to exchange neighbour discovery messages between network devices and are largely implemented in switches and routers (CDP for Cisco and LLDP for the rest).
+The neighbour information is accessible using SNMP MIB’s (reading the neighbours of each device).&lt;/p&gt;
+
+&lt;p&gt;Potentially this could be the perfect solution, but it has some major problems:&lt;/p&gt;
+
+&lt;p&gt;1) SNMP is many times disabled in production due to security reasons, even in cases when its enabled, LLDP and CDP are disabled for the same reason&lt;/p&gt;
+
+&lt;p&gt;2) Anyone that worked enough time with SNMP knows its the wild wild west, even that LLDP and CDP are standards, still many vendors choose to implement them in different and challenging ways which makes it hard to create a unified system to extract this information from the MIB &lt;/p&gt;
+
+&lt;p&gt;3) Some vendors have limitations in their LLDP implementation (for example Brocade switches connected with ISL dont support LLDP).  this makes it hard to be a perfect solution in all deployments.&lt;/p&gt;
+
+&lt;h2&gt;Hypervisor Agents and Traceroute&lt;/h2&gt;
+
+&lt;p&gt;Traceroute is a tool meant to accomplish the exact thing we are trying to achieve, trace the path between two end points. (listing all the L3 devices on the path)&lt;/p&gt;
+
+&lt;p&gt;Traceroute does that by sending packets from source to destination with increasing TTL starting at 1, It leverage the fact that routers decrement packets TTL value by 1 when routing and discard packets whose TTL value has reached zero, returning the ICMP error message ICMP Time Exceeded to the sender.&lt;/p&gt;
+
+&lt;p&gt;We could potentially have agents in the hosts that sends traceroute to one another in order to find the path between two hosts.
+The major problem here relates to something i wrote in the beginning of the post, traceroute doesn’t work in multi paths / load balanced paths, it doesnt find all the paths and can even lead to finding invalid paths.&lt;/p&gt;
+
+&lt;p&gt;The following picture illustrate the problem of traceroute in multipath environments:
+&lt;img src=&quot;http://paris-traceroute.net/images/load_balancer.gif&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As you can see point L is a load balancer, the first packet with TTL=1 and the second packet with TTL=2 are load balanced to the upper path (starting at Device A), how ever the third packet with TTL=3 is load balanced to the down path (starting at Device B)
+This makes traceroute return invalid path as a result.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.paris-traceroute.net/&quot;&gt;Paris Traceroute&lt;/a&gt; is an open source project that tries to solve the above problem.&lt;/p&gt;
+
+&lt;p&gt;Its key innovation is to control the probe packet header fields in a manner that allows all probes towards a destination to follow the same path in the presence of per-flow load balancing. It also allows a user to distinguish between the presence of per-flow load balancing and per-packet load balancing&lt;/p&gt;
+
+&lt;p&gt;you can read more about it in the link, bare in mind that it still doesnt solve all possible dynamic load balancing scenarios but still do better than classical traceroute.&lt;/p&gt;
+
+&lt;p&gt;Another problem of traceroute is that unlike CDP/LLDP it doesnt return the actual interface indexes that the devices are connected by, which is an important information when doing root cause analysis.&lt;/p&gt;
+
+&lt;h2&gt;Record Route&lt;/h2&gt;
+
+&lt;p&gt;Record route is an IP header option (option 7) and is used to track the path of the packet, every router in the path that see this option enabled must add its address to a route list.&lt;/p&gt;
+
+&lt;p&gt;When the packet is received in the end hop, the agent can extract the full path the packet traversed.
+Of course the same problem with multipathing exists with this solution just as well, in addition to possible security issues and even small performance decrease.&lt;/p&gt;
+
+&lt;h2&gt;Flow Export&lt;/h2&gt;
+
+&lt;p&gt;Flow export mechanism (NetFlow / IPFIX / sFlow) can help us collect and analyze flows statistics from all devices and potentially build topology graphs from it.
+A good post that is presenting a demo of troubleshooting a network path using this method can be &lt;a href=&quot;http://bradhedlund.com/2014/09/02/demo-end-to-end-hop-by-hop-physical-and-virtual-network-flow-visibility-with-nsx/&quot;&gt;found here.&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;The demo as you see is a very simple scenario, i am not sure what happens in real deployments when we have so many flows to analyze with duplicated inner IP’s.&lt;/p&gt;
+</description>
+        <pubDate>Fri, 23 Jan 2015 15:25:06 -0800</pubDate>
+        <link>http://galsagie.github.io//sdn/oam/virtualization/2015/01/23/topology-visibility/</link>
+        <guid isPermaLink="true">http://galsagie.github.io//sdn/oam/virtualization/2015/01/23/topology-visibility/</guid>
+      </item>
+    
+      <item>
+        <title>NFV Acceleration (Part 1)</title>
+        <description>&lt;p&gt;NFV is certainly not a term needed to be explained in this point of time, feel free to google it and understand what it is if you never heard about it.&lt;/p&gt;
+
+&lt;p&gt;There are various efforts that are currently taking place in regards to NFV, important one is by trying to standardize the use cases of deploying and managing virtual network functions, &lt;a href=&quot;https://www.opnfv.org&quot;&gt;OPNFV&lt;/a&gt; is an important project in that aspect and i will sure write about it as it matures.
+Of course that another one is the &lt;a href=&quot;http://www.etsi.org/technologies-clusters/technologies/nfv&quot;&gt;ETSI NFV Group&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;In this post series i want to focus on another important effort, improving the NFV performance and QoS aspects, hopefully reaching to carrier-grade performance/availability (or close to it) that is obtained by the physical devices.
+This gets more crucial as virtualizing network functions is happening in the mobile network where specific standards and latencies must be met.&lt;/p&gt;
+
+&lt;p&gt;There are a lot of networking experts that doubt virtual appliances will ever reach a level of service good enough, on this post i will leave these arguments and focus on what are the current options to accelerate virtual appliances in production.&lt;/p&gt;
+
+&lt;h3&gt;User Space Network Acceleration Drivers (DPDK, PF_RING, Netmap)&lt;/h3&gt;
+
+&lt;p&gt;DPDK is a project i have been involved in quite closely.
+The main goal of DPDK is to provide a simple, complete framework for fast packet processing in data plane applications.
+DPDK utilizes standard x86 and Intel NIC&amp;#39;s but has support for other vendors (like Mellanox) and is starting to be ported to others as well.&lt;/p&gt;
+
+&lt;p&gt;The main idea is to create interrupt free run to completion model for packet processing in user space (by mapping the NIC packet buffers directly to userspace).
+It also provide a set of libraries for efficient memory allocations (using hugepages) and memory pools creation , high precision timers  and more importantly multi core processing.
+DPDK also includes virtualization support and virtualization network driver support. &lt;/p&gt;
+
+&lt;p&gt;OpenVSwitch support DPDK as a data path option in the upstream code base, this suppose to provide an accelerated OVS functionality, all running in user space.
+(These two were a separate projects which got merged recently).&lt;/p&gt;
+
+&lt;p&gt;A major effort done in that project is to address the use case of service chaining inside the hypervisor by reducing the data copy of packets between the VM&amp;#39;s and the virtual switch (using shared memory between the host and the VM&amp;#39;s)&lt;/p&gt;
+
+&lt;p&gt;It is important to remember that there is still a big overhead when using DPDK, DPDK has no network stack and actually unbinds the interfaces from the host linux kernel.
+This means the interfaces used by DPDK can not be managed and manipulated using standard linux tools and API&amp;#39;s.&lt;/p&gt;
+
+&lt;p&gt;DPDK offers an &amp;quot;exception-path&amp;quot; solution of injecting traffic to the host network stack but this solution limits the performance of DPDK and multi core processing due to bottlenecks in the network stack.
+In later posts in this series i am going to write about other commercial solutions to this from companies like 6wind and windriver.&lt;/p&gt;
+
+&lt;p&gt;There are many other features in DPDK and i intend on writing more about building applications using DPDK and about OpenVSwitch DPDK in the near future.&lt;/p&gt;
+
+&lt;p&gt;Other frameworks which pretty much focus on the same aspect of DMA&amp;#39;ing packet buffers to user space are PF_RING and netmap, in my opinion they lack the richness/performance of DPDK but are also important to keep in mind.&lt;/p&gt;
+
+&lt;p&gt;These user space networking acceleration frameworks are helping virtual appliance creators to improve performance running on COTS servers and building efficient infrastructure.&lt;/p&gt;
+
+&lt;p&gt;There is another aspect which appliance vendors like when it comes to creating drivers in user space, and thats licensing.
+Linux kernel is GPL, which forces drivers to be open sourced, moving things to user space remove this restriction and is a very charming aspect for vendors trying to hide their secret sauce.&lt;/p&gt;
+
+&lt;p&gt;I am not sure how this issue affect the openness needed to build networks in the SDN and NFV era, but i am pretty sure we are going to see more and more code moving to user space.&lt;/p&gt;
+
+&lt;p&gt;In the next post i am going to write about accelerating NFV&amp;#39;s by bypassing the hypervisors layer with technologies like SR-IOV / Pass Through, and HW offloading solutions.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 21 Jan 2015 15:25:06 -0800</pubDate>
+        <link>http://galsagie.github.io//sdn/nfv/virtualization/2015/01/21/nfv-acceleration/</link>
+        <guid isPermaLink="true">http://galsagie.github.io//sdn/nfv/virtualization/2015/01/21/nfv-acceleration/</guid>
+      </item>
+    
+      <item>
+        <title>OVN and Distributed Controller</title>
+        <description>&lt;p&gt;If you havent heard about it until now, make sure to read the following blog post:
+&lt;a href=&quot;http://networkheresy.com/2015/01/13/ovn-bringing-native-virtual-networking-to-ovs/&quot;&gt;OVN, Bringing Native Virtual Networking to OVS.&lt;/a&gt;
+And the &lt;a href=&quot;http://openvswitch.org/pipermail/dev/2015-January/050380.html&quot;&gt;more detailed architecture design of OVN in OVS offical documentation.&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;The more relevant and interesting phrase, in my opinion, from that entire blog is this:&lt;/p&gt;
+
+&lt;p&gt;“Open vSwitch is the most popular choice of virtual switch in OpenStack deployments. To make OVS more effective in these environments, we believe the logical next step is to augment the low-level switching capabilities with a lightweight control plane that provides native support for common virtual networking abstractions.”&lt;/p&gt;
+
+&lt;p&gt;I have seen a lot of posts regarding this, and it certainly a very interesting project to look for, but i want to tackle this from few interesting views:&lt;/p&gt;
+
+&lt;h2&gt;Policy&lt;/h2&gt;
+
+&lt;p&gt;Reading this architecture reminded me a lot of something else, it reminded me the way &lt;a href=&quot;http://www.cisco.com/c/en/us/solutions/collateral/data-center-virtualization/application-centric-infrastructure/white-paper-c11-731302.html&quot;&gt;Cisco OpFlex&lt;/a&gt; is communicated between the controller and the agent running on the end nodes.&lt;/p&gt;
+
+&lt;p&gt;Similar or not, in my view SDN implementors are starting to realize that we tried to abstract the control from the data plane using only protocols, and maybe thats just not enough.&lt;/p&gt;
+
+&lt;p&gt;By having an agent / controller / lightweight controller / you name it running on the infrastructure at every end point (hypervisors and physical devices) we can concentrate on two things:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Building a  common policy language/protocol/API between all IT teams, which is application aware and can be distributed to all the network infrastructure nodes. 
+Without having to worry how every infrastructure piece is going to implement it
+(Few interesting projects in that area are OpFlex and Congress)&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Building protocols/standards (many) for locally applying the above policy to software/hardware
+(For example OpenFlow)&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Without getting into right or wrong debate, i believe this delegation approach simplifiy things
+and help the community continue to develop the two aspects seperated from each other.&lt;/p&gt;
+
+&lt;p&gt;Having a &amp;quot;control&amp;quot; entity in the end nodes can show value in other areas (hint: OAM, wait for my next post to read more about smart agents).&lt;/p&gt;
+
+&lt;p&gt;There are some solutions already fully distributed, running on the end nodes, &lt;a href=&quot;http://bradhedlund.com/2012/10/06/mind-blowing-l2-l4-network-virtualization-by-midokura-midonet/&quot;&gt;Midokura MidoNet&lt;/a&gt; is one of them.&lt;/p&gt;
+
+&lt;h2&gt;Virtual Network Function Distribution&lt;/h2&gt;
+
+&lt;p&gt;The trend of NFV is already here, virtual appliances for network functions are already
+deployed and used in the data center, especially for east-west traffic.&lt;/p&gt;
+
+&lt;p&gt;The way they are used today is usually as a VM / dedicated node that is used as a logical gateway edge appliance where all traffic goes through.&lt;/p&gt;
+
+&lt;p&gt;This approach proves to cause bottlenecks and we are seeing more and more solutions that try to distribute these network functions to the infrastructure end nodes (more specifically the hypervisors).&lt;/p&gt;
+
+&lt;p&gt;Example projects are OpenStack DVR, and NSX micro segmentation approach (distributed firewall).&lt;/p&gt;
+
+&lt;p&gt;In my opinion this new approach will be used more and more, having a control entity in the hosts can certainly help manage these functions.&lt;/p&gt;
+
+&lt;h2&gt;Context&lt;/h2&gt;
+
+&lt;p&gt;This relates to the last subject but i feel is important enough to stand on its own.&lt;/p&gt;
+
+&lt;p&gt;The hypervisor is the only place where application meets the network, we can not extract this value or correlation context anywhere else in the network.&lt;/p&gt;
+
+&lt;p&gt;physical devices usually try to apply sophisticated (performance expensive) DPI methods to extract this context.&lt;/p&gt;
+
+&lt;p&gt;There are many use cases where a smart control entity (sitting in the hypervisor) can use this information to make better decisions.&lt;/p&gt;
+</description>
+        <pubDate>Fri, 16 Jan 2015 15:25:06 -0800</pubDate>
+        <link>http://galsagie.github.io//ovs/virtualization/2015/01/16/ovn-distributed-controller/</link>
+        <guid isPermaLink="true">http://galsagie.github.io//ovs/virtualization/2015/01/16/ovn-distributed-controller/</guid>
+      </item>
+    
+      <item>
+        <title>MSS Clamping As A Tale Of Network Visibility</title>
+        <description>&lt;p&gt;Path MTU Discovery is a standardized method of finding the maximum transmission unit (MTU) between two IP hosts. 
+(IP fragmentation usually introduces latency and is a performance bottleneck which we want to avoid even in IPv4)&lt;/p&gt;
+
+&lt;p&gt;For IPv4, Path MTU Discovery works by setting the &amp;quot;Dont Fragment&amp;quot; (DF) flag in the IP header and sending the packet to the other host. &lt;/p&gt;
+
+&lt;p&gt;Any device along the path whose MTU is smaller than the packet will drop it, 
+and send back an ICMP Fragmentation Needed message containing its MTU, lowering the MTU and 
+continuing this process until reaching our end host lets us adjust the MTU of the path.&lt;/p&gt;
+
+&lt;p&gt;This approach is nice in theory but still has a lot of issues, 
+mainly the fact that security devices along the path tend to block ICMP messages.&lt;/p&gt;
+
+&lt;p&gt;In order to overcome this, TCP Clamping is introduced.&lt;/p&gt;
+
+&lt;p&gt;The way TCP Clamping solves this is by leveraging the MSS option in the TCP header, 
+for each SYN packet, each device along the path, with TCP Clamping enabled, sets the packet MSS size to be adjusted according to its MTU. &lt;/p&gt;
+
+&lt;p&gt;By the time the packet is reached at the end host, the MSS can represent the MTU of the path.
+(There are some consideration when applying MSS Clamping on a PE Router, for example
+DDoS attacks, You can get more information &lt;a href=&quot;http://media.blubrry.com/ipspace/www.ipSpace.net/nuggets/podcast/X1%20TCP%20MSS%20Clamping.mp4&quot;&gt;here.&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Why is this interesting you ask or even relevant to the topic?&lt;/p&gt;
+
+&lt;p&gt;First, because MTU issues are something that operators fail with when deploying networking virtualization solutions that uses overlay tunneling.&lt;/p&gt;
+
+&lt;p&gt;But more importantly, this remind me that even in today&amp;#39;s SDN time we still don&amp;#39;t have 
+full visibility of the path and the devices along the path between two end points in our network, even inside our data center.&lt;/p&gt;
+
+&lt;p&gt;Of course some solutions which integrate SDN software and hardware claim they do, 
+but when you start integrating network devices and functions from various vendors, 
+you find out we still have a long way to go until everything is integrated with the controller. &lt;/p&gt;
+
+&lt;p&gt;Solutions like MSS Clamping solves this in a distributed way, in the next posts I am going
+to describe some of the challenges of understanding the logical and more importantly, 
+physical path between two VM&amp;#39;s in the data center and different approaches to handle these challenges.&lt;/p&gt;
+
+&lt;p&gt;When virtual and physical networking start to mix, root cause analysis of the problem is getting a lot more important, 
+OAM aspects needs to be thought of, and in my opinion starting now.&lt;/p&gt;
+
+&lt;p&gt;Stay tuned for the next post...&lt;/p&gt;
+</description>
+        <pubDate>Thu, 15 Jan 2015 15:25:06 -0800</pubDate>
+        <link>http://galsagie.github.io//oam/virtualization/2015/01/15/mss-clamping/</link>
+        <guid isPermaLink="true">http://galsagie.github.io//oam/virtualization/2015/01/15/mss-clamping/</guid>
+      </item>
+    
+  </channel>
+</rss>

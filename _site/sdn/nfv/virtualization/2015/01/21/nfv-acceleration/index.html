@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      NFV Acceleration (Part 1) &middot; GalSagie
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/lanyon.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700%7CPT+Sans:400">
+  <link rel="stylesheet" href="/public/font-awesome/css/font-awesome.min.css">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-precomposed.png">
+  <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body>
+
+    <!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
+     styles, `#sidebar-checkbox` for behavior. -->
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+<!-- Toggleable sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-item">
+    <p><img src="http://galsagie.github.io/public/img/my_image.jpg" alt="MyImage" width="200" height="200" /></p>
+    <p>My blog about everything related to SDN, NFV, Virtualization and Cloud</p>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item" href="/">Home</a>
+
+    
+
+    
+    
+      
+        
+      
+    
+      
+        
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/about/">About</a>
+        
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/archive/">Site Archives</a>
+        
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/categories/">Post Categories</a>
+        
+      
+    
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/tags/">Content Tags</a>
+        
+      
+    
+    
+  </nav>
+  
+   <div class="sidebar-item">
+    <p>
+      <a href="https://github.com/GalSagie"><i class="fa fa-github fa-3x"></i></a>
+      <a href="https://twitter.com/GalSagie"><i class="fa fa-twitter fa-3x"></i></a>
+      <a href="https://www.linkedin.com/pub/gal-sagie/14/1ab/577"><i class="fa fa-linkedin-square fa-3x"></i></a>
+      <a href="http://galsagie.github.io/feed.xml"><i class="fa fa-rss fa-3x"></i></a>
+    </p>
+  </div>
+
+  <div class="sidebar-item">
+    <p>
+      &copy; 2015. All rights reserved.
+    </p>
+  </div>
+</div>
+
+
+    <!-- Wrap is the content to shift when toggling the sidebar. We wrap the
+         content to avoid any CSS collisions with our real content. -->
+    <div class="wrap">
+      <div class="masthead">
+        <div class="container">
+          <h3 class="masthead-title">
+            <a href="/" title="Home">GalSagie</a>
+            <small>A blog about network virtualization and cloud</small>
+          </h3>
+        </div>
+      </div>
+
+      <div class="container content">
+        <div class="post">
+  <h1 class="post-title">NFV Acceleration (Part 1)</h1>
+  <span class="post-date">21 Jan 2015</span>
+  <p>NFV is certainly not a term needed to be explained in this point of time, feel free to google it and understand what it is if you never heard about it.</p>
+
+<p>There are various efforts that are currently taking place in regards to NFV, important one is by trying to standardize the use cases of deploying and managing virtual network functions, <a href="https://www.opnfv.org">OPNFV</a> is an important project in that aspect and i will sure write about it as it matures.
+Of course that another one is the <a href="http://www.etsi.org/technologies-clusters/technologies/nfv">ETSI NFV Group</a></p>
+
+<p>In this post series i want to focus on another important effort, improving the NFV performance and QoS aspects, hopefully reaching to carrier-grade performance/availability (or close to it) that is obtained by the physical devices.
+This gets more crucial as virtualizing network functions is happening in the mobile network where specific standards and latencies must be met.</p>
+
+<p>There are a lot of networking experts that doubt virtual appliances will ever reach a level of service good enough, on this post i will leave these arguments and focus on what are the current options to accelerate virtual appliances in production.</p>
+
+<h3>User Space Network Acceleration Drivers (DPDK, PF_RING, Netmap)</h3>
+
+<p>DPDK is a project i have been involved in quite closely.
+The main goal of DPDK is to provide a simple, complete framework for fast packet processing in data plane applications.
+DPDK utilizes standard x86 and Intel NIC&#39;s but has support for other vendors (like Mellanox) and is starting to be ported to others as well.</p>
+
+<p>The main idea is to create interrupt free run to completion model for packet processing in user space (by mapping the NIC packet buffers directly to userspace).
+It also provide a set of libraries for efficient memory allocations (using hugepages) and memory pools creation , high precision timers  and more importantly multi core processing.
+DPDK also includes virtualization support and virtualization network driver support. </p>
+
+<p>OpenVSwitch support DPDK as a data path option in the upstream code base, this suppose to provide an accelerated OVS functionality, all running in user space.
+(These two were a separate projects which got merged recently).</p>
+
+<p>A major effort done in that project is to address the use case of service chaining inside the hypervisor by reducing the data copy of packets between the VM&#39;s and the virtual switch (using shared memory between the host and the VM&#39;s)</p>
+
+<p>It is important to remember that there is still a big overhead when using DPDK, DPDK has no network stack and actually unbinds the interfaces from the host linux kernel.
+This means the interfaces used by DPDK can not be managed and manipulated using standard linux tools and API&#39;s.</p>
+
+<p>DPDK offers an &quot;exception-path&quot; solution of injecting traffic to the host network stack but this solution limits the performance of DPDK and multi core processing due to bottlenecks in the network stack.
+In later posts in this series i am going to write about other commercial solutions to this from companies like 6wind and windriver.</p>
+
+<p>There are many other features in DPDK and i intend on writing more about building applications using DPDK and about OpenVSwitch DPDK in the near future.</p>
+
+<p>Other frameworks which pretty much focus on the same aspect of DMA&#39;ing packet buffers to user space are PF_RING and netmap, in my opinion they lack the richness/performance of DPDK but are also important to keep in mind.</p>
+
+<p>These user space networking acceleration frameworks are helping virtual appliance creators to improve performance running on COTS servers and building efficient infrastructure.</p>
+
+<p>There is another aspect which appliance vendors like when it comes to creating drivers in user space, and thats licensing.
+Linux kernel is GPL, which forces drivers to be open sourced, moving things to user space remove this restriction and is a very charming aspect for vendors trying to hide their secret sauce.</p>
+
+<p>I am not sure how this issue affect the openness needed to build networks in the SDN and NFV era, but i am pretty sure we are going to see more and more code moving to user space.</p>
+
+<p>In the next post i am going to write about accelerating NFV&#39;s by bypassing the hypervisors layer with technologies like SR-IOV / Pass Through, and HW offloading solutions.</p>
+
+  <span class="post-date">Tags:
+    
+    
+
+
+  <a href="http://galsagie.github.io/tags/#DPDK">DPDK</a>
+  
+    &middot;
+  
+
+  <a href="http://galsagie.github.io/tags/#NFV">NFV</a>
+  
+    &middot;
+  
+
+  <a href="http://galsagie.github.io/tags/#SDN">SDN</a>
+  
+
+
+
+  </span>
+  
+    <span class="post-date">
+    &larr; Previous Post: <a href="/ovs/virtualization/2015/01/16/ovn-distributed-controller/">OVN and Distributed Controller</a></span>
+  
+  
+    <span class="post-date">
+    Next Post: <a href="/sdn/oam/virtualization/2015/01/23/topology-visibility/">Topology Visibility in Virtualized Environments</a> &rarr;</span>
+  
+
+  <span class="post-sharing"><p>Be social and share this post!<br />
+
+<a href="https://www.facebook.com/sharer/sharer.php?u=http://galsagie.github.io/sdn/nfv/virtualization/2015/01/21/nfv-acceleration/" title="Share on Facebook"><i class="fa fa-facebook-square fa-2x"></i></a> 
+<a href="https://twitter.com/intent/tweet?text=http://galsagie.github.io/sdn/nfv/virtualization/2015/01/21/nfv-acceleration/" title="Share on Twitter"><i class="fa fa-twitter-square fa-2x"></i></a> 
+<a href="https://plus.google.com/share?url=http://galsagie.github.io/sdn/nfv/virtualization/2015/01/21/nfv-acceleration/" title="Share on Google Plus"><i class="fa fa-google-plus-square fa-2x"></i></a></p></span>
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="http://galsagie.github.io/sdn/nfv/virtualization/2015/01/25/nfv-acceleration-2/">
+            NFV Acceleration (Part 2)
+            <small>25 Jan 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://galsagie.github.io/sdn/oam/virtualization/2015/01/23/topology-visibility/">
+            Topology Visibility in Virtualized Environments
+            <small>23 Jan 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://galsagie.github.io/ovs/virtualization/2015/01/16/ovn-distributed-controller/">
+            OVN and Distributed Controller
+            <small>16 Jan 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'galsagie'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+ 
+<!-- Start of StatCounter Code for Default Guide -->
+<script type="text/javascript">
+var sc_project=10238945; 
+var sc_invisible=0; 
+var sc_security="ea2d3a16"; 
+var scJsHost = (("https:" == document.location.protocol) ?
+"https://secure." : "http://www.");
+document.write("<sc"+"ript type='text/javascript' src='" +
+scJsHost+
+"statcounter.com/counter/counter.js'></"+"script>");
+</script>
+<noscript><div class="statcounter"><a title="shopify visitor
+statistics" href="http://statcounter.com/shopify/"
+target="_blank"><img class="statcounter"
+src="http://c.statcounter.com/10238945/0/ea2d3a16/0/"
+alt="shopify visitor statistics"></a></div></noscript>
+<!-- End of StatCounter Code for Default Guide --> 
+
+      </div>
+    </div>
+
+    <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+
+    <script>
+      (function(document) {
+        var toggle = document.querySelector('.sidebar-toggle');
+        var sidebar = document.querySelector('#sidebar');
+        var checkbox = document.querySelector('#sidebar-checkbox');
+
+        document.addEventListener('click', function(e) {
+          var target = e.target;
+
+          if(!checkbox.checked ||
+             sidebar.contains(target) ||
+             (target === checkbox || target === toggle)) return;
+
+          checkbox.checked = false;
+        }, false);
+      })(document);
+    </script>
+  </body>
+</html>

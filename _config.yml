@@ -9,7 +9,8 @@ permalink:           pretty
 relative_permalinks: true
 
 # Setup
-title:               GalSagie
+title:               'GalSagie'
+name:                'Gal Sagie Blog'
 tagline:             'A blog about network virtualization and cloud'
 description:         'My blog about everything related to SDN, NFV, Virtualization and Cloud'
 url:                 http://galsagie.github.io
