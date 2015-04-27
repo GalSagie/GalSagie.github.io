@@ -2,7 +2,7 @@
 layout: post
 author: gsagie
 title: Containers Support In OVN
-date: 2015-04-26 16:25:06 -0700
+date: 2015-04-27 16:25:06 -0700
 categories:
 - SDN
 - Openstack
@@ -11,6 +11,8 @@ tags:
 - OVS
 - OVN
 - Openstack
+- Docker
+- Containers
 ---
 
 In the previous OVN post i have written about OVN high level architecture, the northbound and southbound DB’s and their main motivations.
