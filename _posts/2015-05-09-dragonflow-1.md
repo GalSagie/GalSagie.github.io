@@ -30,7 +30,9 @@ The first step i did was to install Dragonflow using the devstack plugin, you ca
 
 The following diagram shows us the configured pipeline to each of the openvswitch in the setup, and i will refer to it during this explanation.
 
+
 <img src=”https://farm8.staticflickr.com/7570/16138853907_27969b3289_z_d.jpg”/>
+
 
 # Basic Default Pipeline
 
@@ -94,7 +96,9 @@ Now after we saw and understand the default pipeline, lets add two networks (net
 
 The following diagram shows the network topology in Openstack UI
 
+
 <img src=”https://raw.githubusercontent.com/GalSagie/GalSagie.github.io/master/public/img/topology1.jpeg”/>
+
 
 After we finished the configuration, we can re-check the flows table, for simplicity i only paste the new added flows, all the above flows remains the same
 
