@@ -78,16 +78,18 @@ We can see that the first ping latency is substantially bigger than the rest, th
 Before looking at the newly configured flows by the controller, lets understand how the packet is first matched and sent to the controller.
 
 The packet first arrives to table ‘0’, there it is matched by the input port to the flows we described above and the networking segmentation id is written to its metadata field.
-The first packet is matched as an ARP request (for the default gateway IP) and it is being sent to table 51, there an ARP responder match for the specific network sends an ARP reply with the router interface IP (the default gateway).
-We saw the arp responder flows installations when we connected the network to a router in the previous post.
 
-The next packet also gets the network segmentation written to it, but now it is being sent to table 52 from our classifier table.
-Table 52 is the distributed router implementation, if you remember from the previous post dragonflow install flows for every subnet that matches that subnet and sends the traffic to the controller (if not you can look at the top flows capture).
+The first packet is matched as an ARP request (for the default gateway IP) and it is being sent to table 51, in table 51 an ARP responder match for the specific network (by the IP and segmentation id) and sends an ARP reply with the router interface MAC (the default gateway).
+
+We saw the ARP responder flows installations when we connected the network to a router in the previous post.
+
+The next packet also gets the network segmentation written to it, but now it is being sent to table 52 from our classifier table (not an ARP).
+Table 52 is the L3 distributed router implementation, if you remember from the previous post Dragonflow install flows which matches every subnet to subnet pairs and sends the traffic to the controller (you can view them in the top flows capture in this post).
 
 Its important to remember here that we use the segmentation id (written to the metadata) and the destination IP to understand if this is a L2 or L3 traffic (Dragonflow currently sends L2 traffic to NORMAL pipeline).
 As we also previously saw, the flows in this table must match any possible east-west traffic, we do this in order to classify which traffic is east-west and which is north-south.
 
-If we look now at the configured flows, we can see two new flows
+If we now look at the configured flows, we can see two new flows
 
 ```
  cookie=0x1008000000019, duration=5.704s, table=52, n_packets=1, n_bytes=98, idle_timeout=300, priority=100,ip,metadata=0x1f43,in_port=12,dl_src=fa:16:3e:cf:4b:ed,dl_dst=fa:16:3e:c5:02:4d,nw_src=10.2.0.3,nw_dst=10.1.0.3 actions=dec_ttl,set_field:fa:16:3e:c5:02:4d->eth_src,set_field:fa:16:3e:00:17:e6->eth_dst,output:11
@@ -103,7 +105,7 @@ This parameter including the hard_timeout are configurable in Dragonflow.
 
 ### Summary
 
-In this post we saw how  the reactive mode works in Dragonflow and how the controller receives the first packet and installs the connection between two VM’s.
+In this post we saw how the reactive mode works in Dragonflow and how the controller receives the first packet and installs the connection between two VM’s.
 In the next post i am going to describe how SNAT/DNAT traffic is matched and handled in Dragonflow.
 
 
