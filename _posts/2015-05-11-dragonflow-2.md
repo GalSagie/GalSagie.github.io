@@ -98,7 +98,7 @@ If we now look at the configured flows, we can see two new flows
 
 These two flows are representing the two directions of the connection between the two VM’s by matching the source and destination, the action replaces the source/destination MAC address to represent the router interface address and the destination VM MAC .
 
-Since we are in a single node setup we can see that we just output the packet to the correct port after altering the MAC address, however in multi node setup Dragonflow send the packet to br-tun, modify to the correct tunnel-id and the two connection flows are installed at each of the different compute nodes. (only in case the VM’s are located on different compute nodes)
+Since we are in a single node setup we can see that we just output the packet to the correct port after altering the MAC address. however in multi node setup Dragonflow send the packet to br-tun, modify to the correct tunnel-id and install two flows at each of the different compute nodes (one for each direction). this happens only in case the VM’s are located on different compute nodes.
 
 These flows are configured with idle_timeout, this means that after a given number of seconds of no matching action they will be deleted.
 This parameter including the hard_timeout are configurable in Dragonflow.
