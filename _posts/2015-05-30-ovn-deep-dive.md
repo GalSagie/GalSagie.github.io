@@ -72,7 +72,20 @@ We can also see the router namespace which connects between the private and publ
 
 The OVN Southbound DB Binding table has entries that link between the logical elements configured in the Northbound DB and their location in the physical infrastructure 
 
-<img src="https://raw.githubusercontent.com/GalSagie/GalSagie.github.io/master/public/img/ovn-binding.jpeg" />
+```
+[gal@galstack neutron]$ sudo ovsdb-client dump OVN_Southbound
+Binding table
+_uuid                                chassis                              logical_datapath                     logical_port                           mac                   parent_port tag tunnel_key
+------------------------------------ ------------------------------------ ------------------------------------ -------------------------------------- --------------------- ----------- --- ----------
+0fdcc477-5414-4770-bcd4-9d31d32ca58a 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "3517d591-101d-43be-a390-bc7406c13251" ["fa:16:3e:dd:b9:26"] []          []  5         
+27b5a02d-ceb5-4065-b5a7-52323337ee5c 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "4232963c-0e8b-4851-b767-5cc6eac06078" ["fa:16:3e:b6:bb:4d"] []          []  2         
+a82c6785-30d8-4b1c-a6b6-b835e656c558 []                                   19ddea15-1fa4-48ea-b917-98e362970060 "7c4f6205-9391-46fc-8cff-5b2abcca4efa" ["fa:16:3e:d6:87:a7"] []          []  3         
+95d6be23-125b-429c-978f-a7be486732b8 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "8b88cddb-cbf6-40e6-8a9f-6221a23e9e8f" ["fa:16:3e:e2:77:37"] []          []  4         
+58faa5c5-c52c-4fb3-87a9-f54fb9ba24ee 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "d57f6f68-53e5-4a7c-b0e6-770d15b34da2" ["fa:16:3e:26:57:ff"] []          []  1         
+45b9ec63-2505-4bb4-a9a2-94c5ef020a36 08d56534-806d-4f49-a890-66368069bb3a ff80b0bb-341f-45ab-b906-8c69566939b2 "d5d580b9-a5ee-49d4-93e5-aa80279f7447" ["fa:16:3e:03:15:b0"] []          []  7         
+2c9d67f4-7f7a-4e37-ae2a-0eb6454bcba1 08d56534-806d-4f49-a890-66368069bb3a ff80b0bb-341f-45ab-b906-8c69566939b2 "f905f46c-f1a2-4f99-8561-8dbc6558e5d6" ["fa:16:3e:91:24:4c"] []          []  6  
+```
+
 
 In this table we can see all of our virtual ports with the ID of the chassis they are deployed in (we can see two unique ID’s for the two nodes) , the logical datapath or Neutron network that these ports are attached too (again two unique ID’s for the public and private network).
 
@@ -82,7 +95,7 @@ Lets start observing the flows at each of the nodes, the OVN-controller installs
 
 I print the flows from the compute nodes where VM2 and VM3 are located for simplicity, but the same corresponding pipeline can be seen in the controller node
 
-# Table 0 - Network classification and incoming tunnel traffic dispatching
+### Table 0 - Network classification and incoming tunnel traffic dispatching
 
 ```
  cookie=0x0, duration=75385.021s, table=0, n_packets=24, n_bytes=2503, priority=100,in_port=2 actions=set_field:0x1->metadata,set_field:0x6->reg6,resubmit(,16)
@@ -100,7 +113,7 @@ The rest of the flows are matching traffic by the tun_id, this as i stated above
 
 (We can see that the id’s 6 and 7 represent the local ports in this compute node)
 
-# Table 16 - Ingress Port Security
+### Table 16 - Ingress Port Security
 
 ```
  cookie=0x0, duration=75596.009s, table=16, n_packets=0, n_bytes=0, priority=100,metadata=0x2,dl_src=01:00:00:00:00:00/01:00:00:00:00:00 actions=drop
@@ -125,7 +138,7 @@ The rest of the flows matches on reg6 (the port id), metadata (network id) and s
 We can see that currently this table is populated with entries for all the ports in the system, a future enhancement will only configure the relevant flows depending on the ports located on this compute node. 
 
 
-# Table 17 - Destination lookup, broadcast, multicast and unicast handling (and unknown MACs)
+### Table 17 - Destination lookup, broadcast, multicast and unicast handling (and unknown MACs)
 
 ```
  cookie=0x0, duration=75596.009s, table=17, n_packets=20, n_bytes=2404, priority=100,metadata=0x1,dl_dst=01:00:00:00:00:00/01:00:00:00:00:00 actions=set_field:0x6->reg7,resubmit(,18),set_field:0x5->reg7,resubmit(,18),set_field:0x4->reg7,resubmit(,18),set_field:0x2->reg7,resubmit(,18),set_field:0x7->reg7,resubmit(,18),set_field:0x1->reg7,resubmit(,18)
@@ -148,7 +161,7 @@ In our case that will save duplications as we have ports from the same network l
 
 The rest of the flows are matching solely on the destination MAC addresses for all the possible destination ports, we can see that reg7 is filled with the tunnel_key of the destination port.
 
-# Table 18 - ACL
+### Table 18 - ACL
 
 ```
  cookie=0x0, duration=75596.009s, table=18, n_packets=0, n_bytes=0, priority=0,metadata=0x2 actions=resubmit(,19)
@@ -158,7 +171,7 @@ The rest of the flows are matching solely on the destination MAC addresses for a
 ACL’s are not yet implemented in the Neutron-OVN Integration and that’s why this table is currently empty and just forward the traffic to the next table (19) in the pipeline.
 In the future Security Group rules will be implemented as flows here (and maybe FWaaS as well)
 
-# Table 19 - Egress Port Security
+### Table 19 - Egress Port Security
 
 ```
  cookie=0x0, duration=75596.009s, table=19, n_packets=111, n_bytes=13264, priority=100,metadata=0x1,dl_dst=01:00:00:00:00:00/01:00:00:00:00:00 actions=resubmit(,64)
@@ -177,7 +190,7 @@ This table is very similar to the ingress port security, since we already know i
 This table also handle broadcast traffic.
 Every matched traffic continue to the next table in the pipeline (64)
 
-# Table 64 - Output table (Logical to Physical or Local)
+### Table 64 - Output table (Logical to Physical or Local)
 
 ```
  cookie=0x0, duration=75596.009s, table=64, n_packets=0, n_bytes=0, priority=100,reg6=0x4,reg7=0x4 actions=drop
@@ -206,7 +219,7 @@ If you remember in table 0, there is a dispatch to the correct VM port for each 
 The last two flows match for local traffic for ports that reside on this compute node, the action is just to forward the traffic to the correct port number
 
 
-## Summary
+# Summary
 
 This was a detailed explanation of the current pipeline in OVN, things are very dynamic and changing and i will try to keep everyone updated with any new update.
 In the next posts i will describe some of the future work and projects we are going to do in the Openstack-OVN integration and would love to see more people contribute and actively involved with this.
