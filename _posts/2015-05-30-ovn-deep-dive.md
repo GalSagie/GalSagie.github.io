@@ -72,7 +72,7 @@ We can also see the router namespace which connects between the private and publ
 
 The OVN Southbound DB Binding table has entries that link between the logical elements configured in the Northbound DB and their location in the physical infrastructure 
 
-"""
+<blockquote>
 [gal@galstack neutron]$ sudo ovsdb-client dump OVN_Southbound
 Binding table
 _uuid                                chassis                              logical_datapath                     logical_port                           mac                   parent_port tag tunnel_key
@@ -84,7 +84,7 @@ a82c6785-30d8-4b1c-a6b6-b835e656c558 []                                   19ddea
 58faa5c5-c52c-4fb3-87a9-f54fb9ba24ee 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "d57f6f68-53e5-4a7c-b0e6-770d15b34da2" ["fa:16:3e:26:57:ff"] []          []  1         
 45b9ec63-2505-4bb4-a9a2-94c5ef020a36 08d56534-806d-4f49-a890-66368069bb3a ff80b0bb-341f-45ab-b906-8c69566939b2 "d5d580b9-a5ee-49d4-93e5-aa80279f7447" ["fa:16:3e:03:15:b0"] []          []  7         
 2c9d67f4-7f7a-4e37-ae2a-0eb6454bcba1 08d56534-806d-4f49-a890-66368069bb3a ff80b0bb-341f-45ab-b906-8c69566939b2 "f905f46c-f1a2-4f99-8561-8dbc6558e5d6" ["fa:16:3e:91:24:4c"] []          []  6  
-"""
+</blockquote>
 
 
 In this table we can see all of our virtual ports with the ID of the chassis they are deployed in (we can see two unique ID’s for the two nodes) , the logical datapath or Neutron network that these ports are attached too (again two unique ID’s for the public and private network).
