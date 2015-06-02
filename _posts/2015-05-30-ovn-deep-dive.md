@@ -72,19 +72,25 @@ We can also see the router namespace which connects between the private and publ
 
 The OVN Southbound DB Binding table has entries that link between the logical elements configured in the Northbound DB and their location in the physical infrastructure 
 
-<blockquote>
+```
 [gal@galstack neutron]$ sudo ovsdb-client dump OVN_Southbound
 Binding table
 _uuid                                chassis                              logical_datapath                     logical_port                           mac                   parent_port tag tunnel_key
 ------------------------------------ ------------------------------------ ------------------------------------ -------------------------------------- --------------------- ----------- --- ----------
-0fdcc477-5414-4770-bcd4-9d31d32ca58a 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "3517d591-101d-43be-a390-bc7406c13251" ["fa:16:3e:dd:b9:26"] []          []  5         
-27b5a02d-ceb5-4065-b5a7-52323337ee5c 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "4232963c-0e8b-4851-b767-5cc6eac06078" ["fa:16:3e:b6:bb:4d"] []          []  2         
-a82c6785-30d8-4b1c-a6b6-b835e656c558 []                                   19ddea15-1fa4-48ea-b917-98e362970060 "7c4f6205-9391-46fc-8cff-5b2abcca4efa" ["fa:16:3e:d6:87:a7"] []          []  3         
-95d6be23-125b-429c-978f-a7be486732b8 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "8b88cddb-cbf6-40e6-8a9f-6221a23e9e8f" ["fa:16:3e:e2:77:37"] []          []  4         
-58faa5c5-c52c-4fb3-87a9-f54fb9ba24ee 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "d57f6f68-53e5-4a7c-b0e6-770d15b34da2" ["fa:16:3e:26:57:ff"] []          []  1         
-45b9ec63-2505-4bb4-a9a2-94c5ef020a36 08d56534-806d-4f49-a890-66368069bb3a ff80b0bb-341f-45ab-b906-8c69566939b2 "d5d580b9-a5ee-49d4-93e5-aa80279f7447" ["fa:16:3e:03:15:b0"] []          []  7         
+0fdcc477-5414-4770-bcd4-9d31d32ca58a 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "3517d591-101d-43be-a390-bc7406c13251" ["fa:16:3e:dd:b9:26"] []          []  5  
+       
+27b5a02d-ceb5-4065-b5a7-52323337ee5c 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "4232963c-0e8b-4851-b767-5cc6eac06078" ["fa:16:3e:b6:bb:4d"] []          []  2 
+        
+a82c6785-30d8-4b1c-a6b6-b835e656c558 []                                   19ddea15-1fa4-48ea-b917-98e362970060 "7c4f6205-9391-46fc-8cff-5b2abcca4efa" ["fa:16:3e:d6:87:a7"] []          []  3   
+      
+95d6be23-125b-429c-978f-a7be486732b8 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "8b88cddb-cbf6-40e6-8a9f-6221a23e9e8f" ["fa:16:3e:e2:77:37"] []          []  4   
+      
+58faa5c5-c52c-4fb3-87a9-f54fb9ba24ee 36cf1ffc-78fc-437d-8e6b-b2bf51caa3cf ff80b0bb-341f-45ab-b906-8c69566939b2 "d57f6f68-53e5-4a7c-b0e6-770d15b34da2" ["fa:16:3e:26:57:ff"] []          []  1   
+      
+45b9ec63-2505-4bb4-a9a2-94c5ef020a36 08d56534-806d-4f49-a890-66368069bb3a ff80b0bb-341f-45ab-b906-8c69566939b2 "d5d580b9-a5ee-49d4-93e5-aa80279f7447" ["fa:16:3e:03:15:b0"] []          []  7
+         
 2c9d67f4-7f7a-4e37-ae2a-0eb6454bcba1 08d56534-806d-4f49-a890-66368069bb3a ff80b0bb-341f-45ab-b906-8c69566939b2 "f905f46c-f1a2-4f99-8561-8dbc6558e5d6" ["fa:16:3e:91:24:4c"] []          []  6  
-</blockquote>
+```
 
 
 In this table we can see all of our virtual ports with the ID of the chassis they are deployed in (we can see two unique ID’s for the two nodes) , the logical datapath or Neutron network that these ports are attached too (again two unique ID’s for the public and private network).
