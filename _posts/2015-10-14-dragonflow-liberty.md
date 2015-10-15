@@ -145,6 +145,8 @@ I will describe this subject more in future posts, so stay tuned.
 Hardware offloading is not a new thing, Todays NICs have embedded switches and flow classification
 mechanisms that can be used to offload some of the network pipeline computations to hardware.
 Many companies are already working on fully offloading OVS capabilities to hardware.
+We see tunneling/encapsulation offloading in the NIC as a major improvement which can already
+be done today.
 
 We believe its impossible for the hardware to keep track with the agility of software and there for present
 a hybrid approach of software OVS in addition to hardware capabilities.
@@ -179,6 +181,9 @@ to build the best open source solution we can.
 If you would like to join us, feel free as we are only at the start.
 You can take a look at the full code in [Dragonflow github](https://github.com/openstack/dragonflow) and also check
 our [project launchpad page.](https://launchpad.net/dragonflow)
+
+You can also join us on IRC at freenode in channel #openstack-dragonflow if you have any questions
+or suggestions.
 
 Stay tuned and wait for more posts regarding the above subjects, feel free to email me
 if you would like to meet at the Tokyo OpenStack summit to discuss collaborations.
