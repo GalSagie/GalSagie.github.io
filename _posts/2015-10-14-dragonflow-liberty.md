@@ -35,7 +35,7 @@ independently.
 
 The following diagram describe the current Dragonflow architecture:
 
-<img src="https://raw.githubusercontent.com/openstack/dragonflow/master/doc/images/df-arch.jpg" />
+<img src="https://raw.githubusercontent.com/GalSagie/GalSagie.github.io/master/public/img/df-arch.jpg" />
 
 # Dragonflow Liberty Release
 
@@ -44,7 +44,7 @@ for liberty, you can use [this example local.conf](https://raw.githubusercontent
  to install Dragonflow with devstack on your machine.
 (Dragonflow has its own devstack plugin)
 
-## L2, Distributed L3 Routing (DVR)
+### L2, Distributed L3 Routing (DVR)
 
 Dragonflow uses OpenFlow flows to implement both L2 and distributed L3 (DVR) using one bridge (br-int) on each
 compute host.
@@ -66,7 +66,7 @@ I will do a deeper overview of DF pipeline in later posts, but we believe that t
 helps reduce the amount of redundant data that needs to be synced between the compute nodes and is
 important later when plugging external applications to Dragonflow pipeline.
 
-## Pluggable DB Layer
+### Pluggable DB Layer
 
 This is one of the more interesting features Dragonflow offers.
 Dragonflow uses a DB framework to synchronize the virtual network topology and policy from the CMS
@@ -74,7 +74,7 @@ to all the local controllers, basically we have a Neutron plugin that translate 
 to our DB.
 The local controllers also register themselves to this DB and create tunnels to one another.
 
-<img src="https://raw.githubusercontent.com/openstack/dragonflow/master/doc/images/df-arch2.jpg" />
+<img src="https://raw.githubusercontent.com/GalSagie/GalSagie.github.io/master/public/img/df-arch2.jpg" />
 
 When we designed this area we decided that building a production ready DB system takes time, we also
 thought that different environments require different DB solutions due to their size, SLA restrictions, the DB
@@ -95,7 +95,7 @@ model to simple key/value DB operations and call the pluggable DB driver.
 This is done in order to simplify the creation of new DB drivers and dismiss the need to change them every time
 a new feature in Dragonflow data model is added or changed.
 
-<img src="https://raw.githubusercontent.com/openstack/dragonflow/master/doc/images/df-db-arch.jpg" />
+<img src="https://raw.githubusercontent.com/GalSagie/GalSagie.github.io/master/public/img/df-db-arch.jpg" />
 
 Going forward we have two milestones we want to achieve on this area
 
@@ -112,7 +112,7 @@ Going forward we have two milestones we want to achieve on this area
 
 I am planning to write more about this subject and explain our roadmap and milestones better.
 
-## Distributed DHCP
+### Distributed DHCP
 
 Dragonflow pipeline already support fully distributed DHCP, the local controller at each compute node has an internal
 DHCP application which serves DHCP requests from local VMs.
@@ -123,14 +123,14 @@ You can read more about this in [Eran Gampel Distributed DHCP blog post](http://
 The following features are still in design process but are key indicators for our plans
 and shows that Dragonflow aims to solve and tackle many interesting and useful areas.
 
-## Distributed SNAT/DNAT
+### Distributed SNAT/DNAT
 
 Distributing DNAT (Floating IPs) is something we are already working on and have a clear and simple
 design to integrate it in Dragonflow current pipeline.
 For distributing SNAT we have several ideas but are waiting for additional feedback before we choose
 one way or the other.
 
-## Distributed Network Functions, Topology Injection and Service Chaining
+### Distributed Network Functions, Topology Injection and Service Chaining
 
 This is an area we have some exciting and interesting ideas, what we want is to define a way for external applications
 to be able to manage parts of our OpenFlow pipeline without needing to change the code inside Dragonflow.
@@ -140,7 +140,7 @@ network service functions in a manner which is easy to manage and deploy.
 
 I will describe this subject more in future posts, so stay tuned.
 
-## Smart NICs
+### Smart NICs
 
 Hardware offloading is not a new thing, Todays NICs have embedded switches and flow classification
 mechanisms that can be used to offload some of the network pipeline computations to hardware.
@@ -157,13 +157,13 @@ pipeline correctly depending on the HW capabilities.
 
 We have already started design discussions for a POC with smart NICs vendors.
 
-## Hierarchical Port Binding - SDN TORs
+### Hierarchical Port Binding - SDN TORs
 
 Dragonflow is going to support a specific configuration option to allow it to work with VLAN
 tagging specifying the network segmentation id and have it offload VXLAN tunneling
 to an "SDN Top Of The Rack" switch.
 
-## Containers
+### Containers
 
 Dragonflow is going to support use cases of nested containers inside a VM without the need to introduce
 another layer of overlay abstraction.
