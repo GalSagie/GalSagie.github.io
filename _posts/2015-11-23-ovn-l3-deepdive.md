@@ -30,9 +30,9 @@ The following diagram shows the OpenStack setup i have configured:
 
 How does OVN implement L3 ? in a nutshell it uses a pair of OVS patch ports to simulate
 a connection between logical switch (OpenStack network) to logical router (OpenStack router) and in order to
-do it creates a pair of patch ports for every logical router port.
+do it, it creates a pair of patch ports for every logical router port.
 
-If you are interested in understanding more about patch ports, you can read [this post](http://blog.scottlowe.org/2012/11/27/connecting-ovs-bridges-with-patch-ports/)
+If you are interested in understanding more about patch ports, you can read [this post,](http://blog.scottlowe.org/2012/11/27/connecting-ovs-bridges-with-patch-ports/)
 it describe how patch ports are used to connect two different OVS bridges, in our example they are connected
 to the same bridge and used as a modeling construct but the concept is the same.
 
@@ -87,11 +87,11 @@ As we can see OVN also created 4 patch ports for the two logical router legs, pa
 coming in pairs and we can see that patch port 19 and 20 are connected as peers and the same for
 ports 23 and 24.
 
-For every pair one port represent the port on the logical switch and another patch port used
-to represent the connection to the logical router.
-In order to identify which is which we can check the id in the name
+For every pair, one port represent the side on the logical switch and another patch port used
+to represent the logical router side.
+In order to identify which is which we can check the id in the name.
 
-Following is partially dump of OVN Northbound DB:
+Following is a partial dump of OVN Northbound DB:
 
 ```
 Logical_Router_Port table
@@ -104,8 +104,9 @@ _uuid                                enabled external_ids mac                 na
 
 We can see that the first logical router port name start with 10f594b4, the same as the name of patch port 19.
 This means that this port is basically the logical switch default gateway and has the IP 10.1.0.1, it is treated
-as part of that logical switch in the pipeline (as we will soon see)
-Its peer port (20) is basically "part of the logical router side" and is later used in the pipeline for
+as part of that logical switch in the pipeline (as we will soon see).
+
+Its peer port (20) is basically its end point in the logical router side and is later used in the pipeline for
 the routing process.
 
 The following diagram tries to explain this better:
@@ -146,10 +147,15 @@ responders (ICMP echo request)
 
 ```
  cookie=0x0, duration=10428.269s, table=17, n_packets=0, n_bytes=0, priority=90,icmp,reg6=0x1,metadata=0x6,nw_dst=10.1.0.1,icmp_type=8,icmp_code=0 actions=move:NXM_OF_IP_SRC[]->NXM_OF_IP_DST[],set_field:10.1.0.1->ip_src,set_field:255->nw_ttl,set_field:0->icmp_type,set_field:0->reg6,set_field:0->in_port,resubmit(,18)
+
  cookie=0x0, duration=10428.268s, table=17, n_packets=0, n_bytes=0, priority=90,icmp,reg6=0x1,metadata=0x6,nw_dst=10.1.0.255,icmp_type=8,icmp_code=0 actions=move:NXM_OF_IP_SRC[]->NXM_OF_IP_DST[],set_field:10.1.0.1->ip_src,set_field:255->nw_ttl,set_field:0->icmp_type,set_field:0->reg6,set_field:0->in_port,resubmit(,18)
+
  cookie=0x0, duration=7295.816s, table=17, n_packets=0, n_bytes=0, priority=90,icmp,reg6=0x2,metadata=0x6,nw_dst=10.2.0.1,icmp_type=8,icmp_code=0 actions=move:NXM_OF_IP_SRC[]->NXM_OF_IP_DST[],set_field:10.2.0.1->ip_src,set_field:255->nw_ttl,set_field:0->icmp_type,set_field:0->reg6,set_field:0->in_port,resubmit(,18)
+
  cookie=0x0, duration=7295.816s, table=17, n_packets=0, n_bytes=0, priority=90,icmp,reg6=0x2,metadata=0x6,nw_dst=10.2.0.255,icmp_type=8,icmp_code=0 actions=move:NXM_OF_IP_SRC[]->NXM_OF_IP_DST[],set_field:10.2.0.1->ip_src,set_field:255->nw_ttl,set_field:0->icmp_type,set_field:0->reg6,set_field:0->in_port,resubmit(,18)
+
  cookie=0x0, duration=10428.268s, table=17, n_packets=0, n_bytes=0, priority=90,arp,reg6=0x1,metadata=0x6,arp_tpa=10.1.0.1,arp_op=1 actions=move:NXM_OF_ETH_SRC[]->NXM_OF_ETH_DST[],set_field:fa:16:3e:6c:c0:33->eth_src,set_field:2->arp_op,move:NXM_NX_ARP_SHA[]->NXM_NX_ARP_THA[],set_field:fa:16:3e:6c:c0:33->arp_sha,move:NXM_OF_ARP_SPA[]->NXM_OF_ARP_TPA[],set_field:10.1.0.1->arp_spa,set_field:0x1->reg7,set_field:0->reg6,set_field:0->in_port,resubmit(,32)
+
  cookie=0x0, duration=7295.816s, table=17, n_packets=0, n_bytes=0, priority=90,arp,reg6=0x2,metadata=0x6,arp_tpa=10.2.0.1,arp_op=1 actions=move:NXM_OF_ETH_SRC[]->NXM_OF_ETH_DST[],set_field:fa:16:3e:70:41:c5->eth_src,set_field:2->arp_op,move:NXM_NX_ARP_SHA[]->NXM_NX_ARP_THA[],set_field:fa:16:3e:70:41:c5->arp_sha,move:NXM_OF_ARP_SPA[]->NXM_OF_ARP_TPA[],set_field:10.2.0.1->arp_spa,set_field:0x2->reg7,set_field:0->reg6,set_field:0->in_port,resubmit(,32)
 ```
 These are in charge of replying to ARP or pings on the default gateway for each logical switch (the router ports, IPs 10.1.0.1 and 10.2.0.1)
