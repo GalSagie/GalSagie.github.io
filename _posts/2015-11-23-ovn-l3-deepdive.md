@@ -180,6 +180,7 @@ Following are the steps when VM1 tries to reach VM2 in our setup:
 
 ```
  cookie=0x0, duration=10428.268s, table=18, n_packets=0, n_bytes=0, priority=24,ip,metadata=0x6,nw_dst=10.1.0.0/24 actions=dec_ttl(),move:NXM_OF_IP_DST[]->NXM_NX_REG0[],resubmit(,19)
+
  cookie=0x0, duration=7295.816s, table=18, n_packets=0, n_bytes=0, priority=24,ip,metadata=0x6,nw_dst=10.2.0.0/24 actions=dec_ttl(),move:NXM_OF_IP_DST[]->NXM_NX_REG0[],resubmit(,19)
 ```
 
@@ -193,8 +194,11 @@ If we look at table 19 we can see the following flows:
 
 ```
  cookie=0x0, duration=10428.162s, table=19, n_packets=0, n_bytes=0, priority=200,reg0=0xa010001,metadata=0x6 actions=set_field:fa:16:3e:6c:c0:33->eth_src,set_field:fa:16:3e:6c:c0:33->eth_dst,set_field:0x1->reg7,resubmit(,32)
+
  cookie=0x0, duration=7295.710s, table=19, n_packets=0, n_bytes=0, priority=200,reg0=0xa020001,metadata=0x6 actions=set_field:fa:16:3e:70:41:c5->eth_src,set_field:fa:16:3e:70:41:c5->eth_dst,set_field:0x2->reg7,resubmit(,32)
+
  cookie=0x0, duration=5326.167s, table=19, n_packets=0, n_bytes=0, priority=200,reg0=0xa010003,metadata=0x6 actions=set_field:fa:16:3e:6c:c0:33->eth_src,set_field:fa:16:3e:a4:d1:b5->eth_dst,set_field:0x1->reg7,resubmit(,32)
+
  cookie=0x0, duration=67.313s, table=19, n_packets=0, n_bytes=0, priority=200,reg0=0xa020003,metadata=0x6 actions=set_field:fa:16:3e:70:41:c5->eth_src,set_field:fa:16:3e:fe:37:f2->eth_dst,set_field:0x2->reg7,resubmit(,32)
  ```
 
@@ -208,6 +212,22 @@ MAC and the router port MAC address (again similar to what a router would do)
 The following diagram depicts OVS in this setup:
 
 <img src="https://raw.githubusercontent.com/GalSagie/GalSagie.github.io/master/public/img/ovn-top-pipeline.jpg" />
+
+The following steps summarize the routing process in OVN:
+
+1) The idea is that when a VM try to communicate with another subnet (L3), OVN first sends the traffic to the patch port which
+   represent the default gateway for the VM subnet.
+
+2) Then the packet re-enter the pipeline with an in-port that represent the router side (the patch port peer)
+   and being classified with the same metadata group number.
+
+3) Routing happens, there are matching flows for all the possible destination subnets this packet can reach (depending
+   on the router ports).
+
+4) After OVN identified that the destination is routable the next step is to identify the exact destination
+   according to the destination IP (which is now in reg0 as a hex value).
+
+5) Replace the MAC addresses according to the destination and the router port and send to the final destination.
 
 Its important to note that patch ports traffic traversing should have relatively light performance impact as
 they are only simulated in the user space OF pipeline process.
