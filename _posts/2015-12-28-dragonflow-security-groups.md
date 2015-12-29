@@ -78,11 +78,11 @@ the group to access each other.
 The above mentioned capability makes the current process of syncing security group information
 difficult because it needs to keep track of all the VM ports and the security group they belong
 to and make sure to sync this information on every change to the local agents.
-(In current implementation this is managed with ipsets to improve this problem).
 
 More then that, changes in VM port configuration (addition/removal) and changes in security group
 rules/groups require a complicated process or re-compiling the rules to iptable chains pipeline
 and rules.(Something that sometimes require re-compilation of the entire pipeline)
+(In current implementation this is managed with ipsets to improve this problem).
 
 Neutron reference implementation issue these security group changes using CLI
 iptables commands, which makes large updates slow at the L2 agent.
