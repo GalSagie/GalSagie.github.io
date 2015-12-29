@@ -223,21 +223,21 @@ rules both for egress and ingress at the source.
 
 ### Pros
 
-1) We block traffic at the source and avoid sending traffic which will be dropped
+* We block traffic at the source and avoid sending traffic which will be dropped
 at the destination
 
-2) We dont need to pass any additional metadata and hence dont need Geneve tunneling
+* We dont need to pass any additional metadata and hence dont need Geneve tunneling
 like the second solution
 
 ### Cons
 
-1) In this solution we have to install in the ingress security table flows that match
+* In this solution we have to install in the ingress security table flows that match
 all possible destination ports (still one flow per rule)
 
-2) Its problematic if we are doing smart broadcast/multicast distribution as different
+* Its problematic if we are doing smart broadcast/multicast distribution as different
 security policy can be configured to ports in the same broadcast/multicast domain
 
-3) This is problematic for traffic coming from public/external network
+* This is problematic for traffic coming from public/external network
    (This is solvable, but i will not dwell on it in this post)
 
 
@@ -257,18 +257,18 @@ The pipeline for this solution looks like this:
 
 ### Pros
 
-1) Easier to model public/external traffic security groups
+* Easier to model public/external traffic security groups
 
-2) Can work for optimized L2 broadcast/multicast traffic
+* Can work for optimized L2 broadcast/multicast traffic
 
-3) Require installing security group rule flows only for local ports
+* Require installing security group rule flows only for local ports
 
 ### Cons
 
-1) We have to use Geneve (or other dynamic tunneling) in order to pass the
+* We have to use Geneve (or other dynamic tunneling) in order to pass the
 source security group id number.
 
-2) We send traffic to destination even when we can know it is going to be
+* We send traffic to destination even when we can know it is going to be
 dropped
 
 # Summary
