@@ -84,6 +84,9 @@ More then that, changes in VM port configuration (addition/removal) and changes 
 rules/groups require a complicated process or re-compiling the rules to iptable chains pipeline
 and rules.(Something that sometimes require re-compilation of the entire pipeline)
 
+Neutron reference implementation issue these security group changes using CLI
+iptables commands, which makes large updates slow at the L2 agent.
+
 Even with flow based solutions, the problem still exists as the flows usually have matching
 fields for the VM ports in the group (either by id, or by L2/L3 headers and network id) in
 order to comply with the above requirement.
