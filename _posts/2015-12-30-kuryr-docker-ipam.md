@@ -31,10 +31,15 @@ Any Docker IPAM driver must support the following API:
 
 ```
 type Ipam interface {
+
     GetDefaultAddressSpaces() (string, string, error)
+
     RequestPool(addressSpace, pool, subPool string, options map[string]string, v6 bool) (string, *net.IPNet, map[string]string, error)
+
     ReleasePool(poolID string) error
+
     RequestAddress(string, net.IP, map[string]string) (*net.IPNet, map[string]string, error)
+
     ReleaseAddress(string, net.IP) error
 }
 ```
