@@ -119,7 +119,7 @@ only from one environment of Docker Swarm.
 However, we see strong use cases that users may want to connect containers to the same network from two
 different Docker Swarm instances for example.
 
-Enabling this is rather simple with the above feature, we will just need to manage tags pair a Docker
+Enabling this is rather simple with the above feature, we will just need to manage tags per a Docker
 Swarm environment, this is something we are looking to support really soon.
 
 # Summary
